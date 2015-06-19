@@ -11,27 +11,23 @@ using Sample.Objects;
 
 namespace Sample.DataAccess.Implementation
 {
-    public class BaseRepository<T> : IRepository<T> where T : BaseEntity
+    public abstract class BaseRepository<T> : IRepository<T> where T : BaseEntity
     {
-        private IMongoDatabase _db;
+        private string _connString =
+            "mongodb://admin:admin@ds041651.mongolab.com:41651/sample_enterprise_architecture";
 
-        private IMongoCollection<T> _collection;
-
-        public BaseRepository(string connStr)
+        private readonly IMongoCollection<T> _collection;
+        
+        protected BaseRepository(string connString)
         {
-            var client = new MongoClient(connStr);
+            var client = new MongoClient(_connString);
 
-            _db = client.GetDatabase("test");
+            var db = client.GetDatabase("test");
 
-            _collection = _db.GetCollection<T>(typeof(T).Name);
+            _collection = db.GetCollection<T>(typeof(T).Name);
         }
-
-        public ICollection<T> GetAll()
-        {
-            throw new NotImplementedException();
-        }
-
-        public T GetById(long id)
+        
+        public virtual T GetById(long id)
         {
 
             var filter = Builders<T>.Filter.Eq("_id", id);
@@ -41,6 +37,28 @@ namespace Sample.DataAccess.Implementation
             var a = result.Result;
 
             return a;
+        }
+
+        public virtual ICollection<T> GetAll(Func<T, bool> expression = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual T Add(T entity)
+        {
+            _collection.InsertOneAsync(entity);
+
+            return entity;
+        }
+
+        public virtual bool Update(T entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual bool Delete(T entity)
+        {
+            throw new NotImplementedException();
         }
     }
 }
